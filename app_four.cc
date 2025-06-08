@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <commctrl.h>
 #include "resource.h"
+#include "app_four.h"
 
 const char g_szClassName[] = "myWindowClass";
 const char g_szChildClassName[] = "myMDIChildWindowClass";

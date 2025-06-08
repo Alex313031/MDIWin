@@ -141,13 +141,14 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="app_four.c" />
+    <ClCompile Include="app_four.cc" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app_four.rc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="app_four.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
