@@ -1,5 +1,5 @@
-#include <commctrl.h>
 #include <windows.h>
+#include <commctrl.h>
 
 #include "app_four.h"
 
@@ -14,9 +14,9 @@ BOOL LoadTextFileToEdit(HWND hEdit, LPCTSTR pszFileName) {
 
     dwFileSize = GetFileSize(hFile, NULL);
     if (dwFileSize != 0xFFFFFFFF) {
-      LPSTR pszFileText;
+      LPTSTR pszFileText;
 
-      pszFileText = (LPSTR)GlobalAlloc(GPTR, dwFileSize + 1);
+      pszFileText = (LPTSTR)GlobalAlloc(GPTR, dwFileSize + 1);
       if (pszFileText != NULL) {
         DWORD dwRead;
 
@@ -45,10 +45,10 @@ BOOL SaveTextFileFromEdit(HWND hEdit, LPCTSTR pszFileName) {
     dwTextLength = GetWindowTextLength(hEdit);
     // No need to bother if there's no text.
     if (dwTextLength > 0) {
-      LPSTR pszText;
+      LPTSTR pszText;
       DWORD dwBufferSize = dwTextLength + 1;
 
-      pszText = (LPSTR)GlobalAlloc(GPTR, dwBufferSize);
+      pszText = (LPTSTR)GlobalAlloc(GPTR, dwBufferSize);
       if (pszText != NULL) {
         if (GetWindowText(hEdit, pszText, dwBufferSize)) {
           DWORD dwWritten;
@@ -66,23 +66,23 @@ BOOL SaveTextFileFromEdit(HWND hEdit, LPCTSTR pszFileName) {
 
 void DoFileOpen(HWND hwnd) {
   OPENFILENAME ofn;
-  char szFileName[MAX_PATH] = "";
+  TCHAR szFileName[MAX_PATH] = _T("");
 
   ZeroMemory(&ofn, sizeof(ofn));
 
   ofn.lStructSize = sizeof(ofn);
   ofn.hwndOwner = hwnd;
-  ofn.lpstrFilter = "Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+  ofn.lpstrFilter = _T("Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0");
   ofn.lpstrFile = szFileName;
   ofn.nMaxFile = MAX_PATH;
   ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-  ofn.lpstrDefExt = "txt";
+  ofn.lpstrDefExt = _T("txt");
 
   if (GetOpenFileName(&ofn)) {
     HWND hEdit = GetDlgItem(hwnd, IDC_CHILD_EDIT);
     if (LoadTextFileToEdit(hEdit, szFileName)) {
       SendDlgItemMessage(g_hMainWindow, IDC_MAIN_STATUS, SB_SETTEXT, 0,
-                         (LPARAM) "Opened...");
+                         (LPARAM) _T("Opened..."));
       SendDlgItemMessage(g_hMainWindow, IDC_MAIN_STATUS, SB_SETTEXT, 1,
                          (LPARAM)szFileName);
 
@@ -93,16 +93,16 @@ void DoFileOpen(HWND hwnd) {
 
 void DoFileSave(HWND hwnd) {
   OPENFILENAME ofn;
-  char szFileName[MAX_PATH] = "";
+  TCHAR szFileName[MAX_PATH] = _T("");
 
   ZeroMemory(&ofn, sizeof(ofn));
 
   ofn.lStructSize = sizeof(ofn);
   ofn.hwndOwner = hwnd;
-  ofn.lpstrFilter = "Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0";
+  ofn.lpstrFilter = _T("Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0");
   ofn.lpstrFile = szFileName;
   ofn.nMaxFile = MAX_PATH;
-  ofn.lpstrDefExt = "txt";
+  ofn.lpstrDefExt = _T("txt");
   ofn.Flags =
       OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
 
@@ -110,7 +110,7 @@ void DoFileSave(HWND hwnd) {
     HWND hEdit = GetDlgItem(hwnd, IDC_CHILD_EDIT);
     if (SaveTextFileFromEdit(hEdit, szFileName)) {
       SendDlgItemMessage(g_hMainWindow, IDC_MAIN_STATUS, SB_SETTEXT, 0,
-                         (LPARAM) "Saved...");
+                         (LPARAM) _T("Saved..."));
       SendDlgItemMessage(g_hMainWindow, IDC_MAIN_STATUS, SB_SETTEXT, 1,
                          (LPARAM)szFileName);
 
@@ -123,7 +123,7 @@ HWND CreateNewMDIChild(HWND hMDIClient) {
   MDICREATESTRUCT mcs;
   HWND hChild;
 
-  mcs.szTitle = "[Untitled]";
+  mcs.szTitle = _T("[Untitled]");
   mcs.szClass = g_szChildClassName;
   mcs.hOwner = GetModuleHandle(NULL);
   mcs.x = mcs.cx = CW_USEDEFAULT;
@@ -132,7 +132,7 @@ HWND CreateNewMDIChild(HWND hMDIClient) {
 
   hChild = (HWND)SendMessage(hMDIClient, WM_MDICREATE, 0, (LONG)&mcs);
   if (!hChild) {
-    MessageBox(hMDIClient, "MDI Child creation failed.", "Oh Oh...",
+    MessageBox(hMDIClient, _T("MDI Child creation failed."), _T("Uh Oh..."),
                MB_ICONEXCLAMATION | MB_OK);
   }
   return hChild;
@@ -157,13 +157,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       ccs.idFirstChild = ID_MDI_FIRSTCHILD;
 
       g_hMDIClient = CreateWindowEx(
-          WS_EX_CLIENTEDGE, "mdiclient", NULL,
+          WS_EX_CLIENTEDGE, _T("mdiclient"), NULL,
           WS_CHILD | WS_CLIPCHILDREN | WS_VSCROLL | WS_HSCROLL | WS_VISIBLE,
           CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hwnd,
           (HMENU)IDC_MAIN_MDI, GetModuleHandle(NULL), (LPVOID)&ccs);
 
       if (g_hMDIClient == NULL)
-        MessageBox(hwnd, "Could not create MDI client.", "Error",
+        MessageBox(hwnd, _T("Could not create MDI client."), _T("Error"),
                    MB_OK | MB_ICONERROR);
 
       // Create Toolbar
@@ -172,7 +172,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                              0, 0, 0, 0, hwnd, (HMENU)IDC_MAIN_TOOL,
                              GetModuleHandle(NULL), NULL);
       if (hTool == NULL)
-        MessageBox(hwnd, "Could not create tool bar.", "Error",
+        MessageBox(hwnd, _T("Could not create tool bar."), _T("Error"),
                    MB_OK | MB_ICONERROR);
 
       // Send the TB_BUTTONSTRUCTSIZE message, which is required for
@@ -210,7 +210,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
       SendMessage(hStatus, SB_SETPARTS, sizeof(statwidths) / sizeof(int),
                   (LPARAM)statwidths);
-      SendMessage(hStatus, SB_SETTEXT, 0, (LPARAM) "Hi there :)");
+      SendMessage(hStatus, SB_SETTEXT, 0, (LPARAM) _T("Hi there :)"));
     } break;
     case WM_SIZE: {
       HWND hTool;
@@ -313,13 +313,13 @@ LRESULT CALLBACK MDIChildWndProc(HWND hwnd,
 
       // Create Edit Control
 
-      hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
+      hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""),
                              WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL |
                                  ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
                              0, 0, 100, 100, hwnd, (HMENU)IDC_CHILD_EDIT,
                              GetModuleHandle(NULL), NULL);
       if (hEdit == NULL)
-        MessageBox(hwnd, "Could not create edit box.", "Error",
+        MessageBox(hwnd, _T("Could not create edit box."), _T("Error"),
                    MB_OK | MB_ICONERROR);
 
       hfDefault = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
@@ -402,16 +402,16 @@ BOOL SetUpMDIChildWindowClass(HINSTANCE hInstance) {
   wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 
   if (!RegisterClassEx(&wc)) {
-    MessageBox(0, "Could Not Register Child Window", "Oh Oh...",
+    MessageBox(0, _T("Could Not Register Child Window"), _T("Uh Oh..."),
                MB_ICONEXCLAMATION | MB_OK);
     return FALSE;
   } else
     return TRUE;
 }
 
-int WINAPI WinMain(HINSTANCE hInstance,
+int WINAPI _tWinMain(HINSTANCE hInstance,
                    HINSTANCE hPrevInstance,
-                   LPSTR lpCmdLine,
+                   LPTSTR lpCmdLine,
                    int nCmdShow) {
   WNDCLASSEX wc;
   HWND hwnd;
@@ -433,7 +433,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
   wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 
   if (!RegisterClassEx(&wc)) {
-    MessageBox(NULL, "Window Registration Failed!", "Error!",
+    MessageBox(NULL, _T("Window Registration Failed!"), _T("Error!"),
                MB_ICONEXCLAMATION | MB_OK);
     return 0;
   }
@@ -441,12 +441,12 @@ int WINAPI WinMain(HINSTANCE hInstance,
   if (!SetUpMDIChildWindowClass(hInstance))
     return 0;
 
-  hwnd = CreateWindowEx(0, g_szClassName, "theForger's Tutorial Application",
+  hwnd = CreateWindowEx(0, g_szClassName, _T("theForger's Tutorial Application"),
                         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT,
                         CW_USEDEFAULT, 480, 320, NULL, NULL, hInstance, NULL);
 
   if (hwnd == NULL) {
-    MessageBox(NULL, "Window Creation Failed!", "Error!",
+    MessageBox(NULL, _T("Window Creation Failed!"), _T("Error!"),
                MB_ICONEXCLAMATION | MB_OK);
     return 0;
   }
