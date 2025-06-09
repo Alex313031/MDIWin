@@ -22,8 +22,9 @@ BOOL LoadTextFileToEdit(HWND hEdit, LPCTSTR pszFileName) {
 
         if (ReadFile(hFile, pszFileText, dwFileSize, &dwRead, NULL)) {
           pszFileText[dwFileSize] = 0;  // Add null terminator
-          if (SetWindowText(hEdit, pszFileText))
+          if (SetWindowText(hEdit, pszFileText)) {
             bSuccess = TRUE;  // It worked!
+          }
         }
         GlobalFree(pszFileText);
       }
@@ -53,8 +54,9 @@ BOOL SaveTextFileFromEdit(HWND hEdit, LPCTSTR pszFileName) {
         if (GetWindowText(hEdit, pszText, dwBufferSize)) {
           DWORD dwWritten;
 
-          if (WriteFile(hFile, pszText, dwTextLength, &dwWritten, NULL))
+          if (WriteFile(hFile, pszText, dwTextLength, &dwWritten, NULL)) {
             bSuccess = TRUE;
+          }
         }
         GlobalFree(pszText);
       }
@@ -123,7 +125,7 @@ HWND CreateNewMDIChild(HWND hMDIClient) {
   MDICREATESTRUCT mcs;
   HWND hChild;
 
-  mcs.szTitle = _T("[Untitled]");
+  mcs.szTitle = szEmptyFileName;
   mcs.szClass = g_szChildClassName;
   mcs.hOwner = GetModuleHandle(NULL);
   mcs.x = mcs.cx = CW_USEDEFAULT;
@@ -150,30 +152,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
       CLIENTCREATESTRUCT ccs;
 
-      // Create MDI Client
-
       // Find window menu where children will be listed
       ccs.hWindowMenu = GetSubMenu(GetMenu(hwnd), 2);
       ccs.idFirstChild = ID_MDI_FIRSTCHILD;
 
+      // Create MDI Client
       g_hMDIClient = CreateWindowEx(
           WS_EX_CLIENTEDGE, _T("mdiclient"), NULL,
           WS_CHILD | WS_CLIPCHILDREN | WS_VSCROLL | WS_HSCROLL | WS_VISIBLE,
           CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hwnd,
           (HMENU)IDC_MAIN_MDI, GetModuleHandle(NULL), (LPVOID)&ccs);
 
-      if (g_hMDIClient == NULL)
+      if (g_hMDIClient == NULL) {
         MessageBox(hwnd, _T("Could not create MDI client."), _T("Error"),
                    MB_OK | MB_ICONERROR);
+      }
 
       // Create Toolbar
-
       hTool = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_CHILD | WS_VISIBLE,
                              0, 0, 0, 0, hwnd, (HMENU)IDC_MAIN_TOOL,
                              GetModuleHandle(NULL), NULL);
-      if (hTool == NULL)
+      if (hTool == NULL) {
         MessageBox(hwnd, _T("Could not create tool bar."), _T("Error"),
                    MB_OK | MB_ICONERROR);
+      }
 
       // Send the TB_BUTTONSTRUCTSIZE message, which is required for
       // backward compatibility.
@@ -203,7 +205,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                   (LPARAM)&tbb);
 
       // Create Status bar
-
       hStatus = CreateWindowEx(
           0, STATUSCLASSNAME, NULL, WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP, 0,
           0, 0, 0, hwnd, (HMENU)IDC_MAIN_STATUS, GetModuleHandle(NULL), NULL);
@@ -215,18 +216,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     case WM_SIZE: {
       HWND hTool;
       RECT rcTool;
-      int iToolHeight;
+      LONG iToolHeight;
 
       HWND hStatus;
       RECT rcStatus;
-      int iStatusHeight;
+      LONG iStatusHeight;
 
       HWND hMDI;
-      int iMDIHeight;
       RECT rcClient;
+      LONG iMDIHeight;
 
       // Size toolbar and get height
-
       hTool = GetDlgItem(hwnd, IDC_MAIN_TOOL);
       SendMessage(hTool, TB_AUTOSIZE, 0, 0);
 
@@ -234,7 +234,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       iToolHeight = rcTool.bottom - rcTool.top;
 
       // Size status bar and get height
-
       hStatus = GetDlgItem(hwnd, IDC_MAIN_STATUS);
       SendMessage(hStatus, WM_SIZE, 0, 0);
 
@@ -242,11 +241,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       iStatusHeight = rcStatus.bottom - rcStatus.top;
 
       // Calculate remaining height and size edit
-
       GetClientRect(hwnd, &rcClient);
 
       iMDIHeight = rcClient.bottom - iToolHeight - iStatusHeight;
 
+      // Find and set window metrics and position
       hMDI = GetDlgItem(hwnd, IDC_MAIN_MDI);
       SetWindowPos(hMDI, NULL, 0, iToolHeight, rcClient.right, iMDIHeight,
                    SWP_NOZORDER);
@@ -312,15 +311,15 @@ LRESULT CALLBACK MDIChildWndProc(HWND hwnd,
       HWND hEdit;
 
       // Create Edit Control
-
       hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, _T("EDIT"), _T(""),
                              WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL |
                                  ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
                              0, 0, 100, 100, hwnd, (HMENU)IDC_CHILD_EDIT,
                              GetModuleHandle(NULL), NULL);
-      if (hEdit == NULL)
+      if (hEdit == NULL) {
         MessageBox(hwnd, _T("Could not create edit box."), _T("Error"),
                    MB_OK | MB_ICONERROR);
+      }
 
       hfDefault = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
       SendMessage(hEdit, WM_SETFONT, (WPARAM)hfDefault, MAKELPARAM(FALSE, 0));
@@ -371,14 +370,12 @@ LRESULT CALLBACK MDIChildWndProc(HWND hwnd,
       RECT rcClient;
 
       // Calculate remaining height and size edit
-
       GetClientRect(hwnd, &rcClient);
 
       hEdit = GetDlgItem(hwnd, IDC_CHILD_EDIT);
       SetWindowPos(hEdit, NULL, 0, 0, rcClient.right, rcClient.bottom,
                    SWP_NOZORDER);
     }
-      return DefMDIChildProc(hwnd, msg, wParam, lParam);
     default:
       return DefMDIChildProc(hwnd, msg, wParam, lParam);
   }
@@ -388,6 +385,7 @@ LRESULT CALLBACK MDIChildWndProc(HWND hwnd,
 BOOL SetUpMDIChildWindowClass(HINSTANCE hInstance) {
   WNDCLASSEX wc;
 
+  // Window class details
   wc.cbSize = sizeof(WNDCLASSEX);
   wc.style = CS_HREDRAW | CS_VREDRAW;
   wc.lpfnWndProc = MDIChildWndProc;
@@ -402,17 +400,19 @@ BOOL SetUpMDIChildWindowClass(HINSTANCE hInstance) {
   wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 
   if (!RegisterClassEx(&wc)) {
-    MessageBox(0, _T("Could Not Register Child Window"), _T("Uh Oh..."),
+    MessageBox(0, _T("Could not register MDIChild Window"), _T("Uh Oh..."),
                MB_ICONEXCLAMATION | MB_OK);
     return FALSE;
-  } else
+  } else {
     return TRUE;
+  }
 }
 
 int WINAPI _tWinMain(HINSTANCE hInstance,
-                   HINSTANCE hPrevInstance,
-                   LPTSTR lpCmdLine,
-                   int nCmdShow) {
+                     HINSTANCE hPrevInstance,
+                     LPTSTR lpCmdLine,
+                     int nCmdShow) {
+  UNREFERENCED_PARAMETER(hPrevInstance);
   WNDCLASSEX wc;
   HWND hwnd;
   MSG Msg;
@@ -435,20 +435,21 @@ int WINAPI _tWinMain(HINSTANCE hInstance,
   if (!RegisterClassEx(&wc)) {
     MessageBox(NULL, _T("Window Registration Failed!"), _T("Error!"),
                MB_ICONEXCLAMATION | MB_OK);
-    return 0;
+    return 1;
   }
 
-  if (!SetUpMDIChildWindowClass(hInstance))
-    return 0;
+  if (!SetUpMDIChildWindowClass(hInstance)) {
+    return 1;
+  }
 
-  hwnd = CreateWindowEx(0, g_szClassName, _T("theForger's Tutorial Application"),
+  hwnd = CreateWindowEx(0, g_szClassName, lpszWindowTitle,
                         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT,
                         CW_USEDEFAULT, 480, 320, NULL, NULL, hInstance, NULL);
 
-  if (hwnd == NULL) {
+  if (!hwnd || hwnd == NULL) {
     MessageBox(NULL, _T("Window Creation Failed!"), _T("Error!"),
                MB_ICONEXCLAMATION | MB_OK);
-    return 0;
+    return 1;
   }
 
   g_hMainWindow = hwnd;
